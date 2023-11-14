@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,8 +37,13 @@ public class AuthController {
 	private AuthenticationManager authenticationManager;
 	
 	@PostMapping("/register")
-	public void addNewUser(@RequestBody User user) {
-		userService.saveUser(user);
+	public ResponseEntity<Long> addNewUser(@RequestBody User user) {
+		try {
+			User u = userService.saveUser(user);
+			return ResponseEntity.ok(u.getId());
+		} catch (DuplicateKeyException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+		}
 	}
 	
 	@PostMapping("/login")

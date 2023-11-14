@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -41,6 +42,10 @@ public class UserService implements UserDetailsService {
 	private RestauranteClient restauranteClient; 
 	
 	public User saveUser(User user) {
+		Optional<User> userBanco = findByUserName(user.getUsername());
+		if (userBanco.isPresent()) {
+			throw new DuplicateKeyException("Nome de usuário já cadastrado");
+		}
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		return userRepository.save(user);
 	}
