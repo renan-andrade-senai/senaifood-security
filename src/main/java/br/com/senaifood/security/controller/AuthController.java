@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,12 +52,12 @@ public class AuthController {
 		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 		if (authentication.isAuthenticated()) {
 			User usuario = (User) authentication.getPrincipal();
-			UserDto userDto = new UserDto(usuario.getId(), user.getUsername(), null, userService.generateToken(user.getUsername()));
-			Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-			if (authorities != null && !authorities.isEmpty()) {
-				Optional<? extends GrantedAuthority> authority = authorities.stream().reduce((result, element) -> element);
-				authority.ifPresent((a) -> userDto.setTipoUsuario(TipoUsuario.fromDesc(a.getAuthority())));
-			}
+			UserDto userDto = new UserDto(usuario.getId(), user.getUsername(), usuario.getTipoUsuario(), userService.generateToken(user.getUsername()));
+//			Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+//			if (authorities != null && !authorities.isEmpty()) {
+//				Optional<? extends GrantedAuthority> authority = authorities.stream().reduce((result, element) -> element);
+//				authority.ifPresent((a) -> userDto.setTipoUsuario(TipoUsuario.fromDesc(a.getAuthority())));
+//			}
 			Object dadosUsuario = userService.getDadosUsuario(userDto);
 			HashMap<String, Object> retorno = new HashMap<>(2);
 			retorno.put("user", userDto);
@@ -70,6 +71,20 @@ public class AuthController {
 	@GetMapping("/validate")
 	public void validateToken(@RequestParam("token") String token) {
 		userService.validateToken(token);
+	}
+	
+	@GetMapping("/usertoken")
+	public ResponseEntity<?> getUserFromToken(@RequestParam("token") String token) {
+		User user = userService.findUserFromToken(token);
+		if (user == null) {
+			throw new UsernameNotFoundException("Usuário não encontrado");
+		}
+		UserDto userDto = new UserDto(user.getId(), user.getUsername(), user.getTipoUsuario(), token);
+		Object dadosUsuario = userService.getDadosUsuario(userDto);
+		HashMap<String, Object> retorno = new HashMap<>(2);
+		retorno.put("user", userDto);
+		retorno.put("dados", dadosUsuario);
+		return ResponseEntity.ok(retorno);
 	}
 
 }

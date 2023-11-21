@@ -1,6 +1,8 @@
 package br.com.senaifood.security.service;
 
 import java.security.Key;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,8 +20,9 @@ public class JwtService {
 	@Value("${secure.key}")
 	private String secureKey;
 	
-	public void validateToken(String token) {
-		Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody();
+	public String validateToken(String token) {
+		return Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody()
+				.getSubject();
 	}
 	
 	public String generateToken(String username) {
@@ -31,7 +34,7 @@ public class JwtService {
 		return Jwts.builder().setClaims(claims)
 				.setSubject(username)
 				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
+				.setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
 				.signWith(getSignKey()).compact();
 	}
 	

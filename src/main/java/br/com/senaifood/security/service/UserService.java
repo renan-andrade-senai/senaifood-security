@@ -57,6 +57,15 @@ public class UserService implements UserDetailsService {
 	public void validateToken(String token) {
 		jwtService.validateToken(token);
 	}
+	
+	public User findUserFromToken(String token) {
+		String username = jwtService.validateToken(token);
+		if (StringUtils.isNotBlank(username)) {
+			Optional<User> user = findByUserName(username);
+			return user.orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+		}
+		return null;
+	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
