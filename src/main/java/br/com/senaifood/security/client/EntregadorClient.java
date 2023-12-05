@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import br.com.senaifood.security.dto.EntregadorDto;
 
-@FeignClient("entregador")
+@FeignClient("entrega")
 public interface EntregadorClient {
 	
 	@GetMapping("/entregador/idusuario/{id}")
